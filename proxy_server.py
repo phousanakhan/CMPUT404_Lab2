@@ -10,6 +10,7 @@ BUFFER_SIZE = 1024
 
 def main():
     port = 80
+    host = "www.google.com"
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
         # QUESTION 3
@@ -17,6 +18,7 @@ def main():
 
         # bind socket to address
         s.bind((HOST, PORT))
+
         # set to listening mode
         s.listen(2)
 
@@ -25,15 +27,16 @@ def main():
             conn, addr = s.accept()
             print("Connected by", addr)
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as proxy_end:
-                remote_ip = socket.gethostbyname("www.google.com")
+                remote_ip = socket.gethostbyname(host)
                 proxy_end.connect((remote_ip, port))
                 # recieve data, wait a bit, then send it back
-                full_data = conn.recv(BUFFER_SIZE)
-                print(f"sending recieved data {full_data} to Google")
+                data = conn.recv(BUFFER_SIZE)
+                proxy_end.sendall(data)
+                print(f"sending recieved data {data} to Google")
                 proxy_end.shutdown(socket.SHUT_WR)
-                conn.sendall(full_data)
+                full_data = proxy_end.recv(BUFFER_SIZE)
+                conn.send(full_data)
             conn.close()
 
 
-if __name__ == "__main__":
-    main()
+main()
